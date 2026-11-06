@@ -1,0 +1,5 @@
+{
+  "name": "mac-load",
+  "owner": { "name": "baboleevan" },
+  "plugins": [{ "name": "mac-load", "source": "./" }]
+}

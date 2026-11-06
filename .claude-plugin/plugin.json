@@ -1,0 +1,6 @@
+{
+  "name": "mac-load",
+  "version": "0.1.0",
+  "description": "로컬 맥의 CPU·메모리 부하와 상위 프로세스를 2초마다 보여 주는 실시간 패널",
+  "types": "./types/index.d.ts"
+}
