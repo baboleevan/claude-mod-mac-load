@@ -16,7 +16,10 @@ export type Snapshot = {
   mem: { usedGb: number; totalGb: number; wiredGb: number; compressedGb: number };
   /** `memory_pressure`가 알려 주는 시스템 전체 메모리 여유율(%)입니다. 읽지 못하면 null입니다. */
   freePercent: number | null;
+  /** CPU를 많이 쓰는 상위 프로세스입니다. */
   procs: Proc[];
+  /** 메모리를 많이 쓰는 상위 프로세스입니다. */
+  memProcs: Proc[];
   history: Sample[];
   /** 마지막 측정이 실패했다면 이유입니다. */
   error: string | null;

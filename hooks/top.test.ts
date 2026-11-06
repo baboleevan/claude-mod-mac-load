@@ -39,6 +39,34 @@ test('마지막 표본의 CPU·부하·메모리·프로세스를 읽는다', as
     // 이름에 공백이 있어도 뒤의 두 열을 먼저 떼어 내므로 온전히 읽는다.
     [84844, 'Aside Helper', 17, '1307M+'],
   ])
+  expect(reading?.memProcs.map(p => p.pid)).toEqual([90070, 204, 84844])
+})
+
+// 모든 프로세스가 나오는 출력(`-n` 없음)에서 CPU 순과 메모리 순 상위를 각각 뽑는지 보려는 짧은 예입니다.
+// 메모리는 K·M·G 단위와 +/- 표시가 섞여 있어, 글자 순이 아니라 실제 크기로 견줘야 합니다.
+const MANY = `Processes: 7 total, 1 running, 6 sleeping, 90 threads
+2026/11/06 17:50:00
+Load Avg: 1.00, 2.00, 3.00
+CPU usage: 10.0% user, 5.0% sys, 85.0% idle
+PhysMem: 8G used (1G wired, 2G compressor), 1G unused.
+
+PID    COMMAND          %CPU  MEM
+10     alpha            0.5   900M
+11     bravo            30.0  3G
+12     charlie          12.5  512K+
+13     delta            80.0  1500M-
+14     echo             0.0   2G
+15     foxtrot          12.5  700M
+16     golf             1.0   40M
+`
+
+test('CPU 순과 메모리 순 상위 5개를 각각 뽑는다', async () => {
+  const reading = parseTop(MANY)
+  expect(reading?.procs.map(p => p.command)).toEqual(['delta', 'bravo', 'charlie', 'foxtrot', 'golf'])
+  // 메모리는 3G > 2G > 1500M > 900M > 700M 순이다("512K"나 "40M"은 글자 순으로는 앞서지만 작다).
+  expect(reading?.memProcs.map(p => p.command)).toEqual(['bravo', 'echo', 'delta', 'alpha', 'foxtrot'])
+  // 개수를 줄 수도 있다.
+  expect(parseTop(MANY, 2)?.memProcs.map(p => p.command)).toEqual(['bravo', 'echo'])
 })
 
 test('읽을 수 없는 출력은 null이다', async () => {

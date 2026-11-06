@@ -20,18 +20,22 @@ const EMPTY: Snapshot = {
   mem: { usedGb: 0, totalGb: 0, wiredGb: 0, compressedGb: 0 },
   freePercent: null,
   procs: [],
+  memProcs: [],
   history: [],
   error: null,
 }
 
 // 값의 모양을 바꾸면 shape 태그도 바꿉니다. 이전 버전이 저장한 값은 다시 불러올 때 버려집니다.
 const snapshot = atom({ plugin: 'mac-load', key: 'snapshot' } as const, EMPTY, {
-  shape: 'snapshot-1',
+  shape: 'snapshot-2',
 })
 
-/** 두 번째 표본(직전 1초의 값)을 쓰려고 두 번 읽고, CPU 순 상위 5개 프로세스를 함께 받습니다. */
+/**
+ * 두 번째 표본(직전 1초의 값)을 쓰려고 두 번 읽습니다.
+ * `-n`을 주지 않아 모든 프로세스가 나오며, 여기서 CPU 순·메모리 순 상위 5개를 각각 뽑습니다(비용은 `-n 5`와 같습니다).
+ */
 const TOP_ARGV = [
-  'top', '-l', '2', '-s', '1', '-n', '5', '-o', 'cpu', '-stats', 'pid,command,cpu,mem',
+  'top', '-l', '2', '-s', '1', '-o', 'cpu', '-stats', 'pid,command,cpu,mem',
 ] as const
 
 const SPARKS = '▁▂▃▄▅▆▇█'
@@ -97,6 +101,7 @@ async function measure($: EngineInterface): Promise<void> {
       mem: reading.mem,
       freePercent: free,
       procs: reading.procs,
+      memProcs: reading.memProcs,
       history: [...prev.history, { cpu: round1(100 - reading.cpu.idle), mem: round1(memPercent) }].slice(
         -HISTORY,
       ),
@@ -213,6 +218,15 @@ export const register: Register = on => {
         {s.procs.map(proc => (
           <Text>
             {proc.cpu.toFixed(1).padStart(6)}% <Text dimColor>{proc.mem.padStart(6)}</Text> {proc.command}
+          </Text>
+        ))}
+
+        <Text> </Text>
+        <Text bold>메모리 상위 프로세스</Text>
+        {s.memProcs.length === 0 && <Text dimColor>표시할 프로세스가 없습니다.</Text>}
+        {s.memProcs.map(proc => (
+          <Text>
+            {proc.mem.padStart(7)} <Text dimColor>{proc.cpu.toFixed(1).padStart(6)}%</Text> {proc.command}
           </Text>
         ))}
 
